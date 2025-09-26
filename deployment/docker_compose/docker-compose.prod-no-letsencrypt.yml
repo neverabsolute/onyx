@@ -172,7 +172,8 @@ services:
     shm_size: 1g
     command: -c 'max_connections=250'
     restart: unless-stopped
-    # POSTGRES_USER and POSTGRES_PASSWORD should be set in .env file
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - db_volume:/var/lib/postgresql/data
     logging:
