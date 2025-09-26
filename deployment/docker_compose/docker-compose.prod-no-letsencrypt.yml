@@ -204,8 +204,8 @@ services:
       - api_server
       - web_server
     volumes:
-      - ../data/nginx:/etc/nginx/conf.d
-      - ../data/sslcerts:/etc/nginx/sslcerts
+    - ./deployment/docker_compose/nginx:/etc/nginx/conf.d:ro
+    - ./deployment/docker_compose/sslcerts:/etc/nginx/sslcerts
     logging:
       driver: json-file
       options:
