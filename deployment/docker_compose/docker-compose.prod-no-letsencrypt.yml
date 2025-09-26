@@ -9,7 +9,7 @@ services:
     command: >
       /bin/sh -c "alembic upgrade head &&
       echo \"Starting Onyx Api Server\" &&
-      uvicorn onyx.main:app --host 0.0.0.0 --port 8080"
+      uvicorn onyx.main:app --host 0.0.0.0 --port 8080 --proxy-headers --forwarded-allow-ips='*'"
     depends_on:
       - relational_db
       - index
@@ -44,6 +44,22 @@ services:
     volumes:
       # optional, only for debugging purposes
       - api_server_logs:/var/log/onyx
+    labels:
+      - traefik.enable=true
+    
+      # /api → backend (but backend expects paths without /api, so strip it)
+      - traefik.http.routers.onyx-api.rule=Host(`onyx.flowdata.ai`) && PathPrefix(`/api`)
+      - traefik.http.routers.onyx-api.entryPoints=https
+      - traefik.http.routers.onyx-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.onyx-api.middlewares=onyx-strip-api
+      - traefik.http.services.onyx-api.loadbalancer.server.port=8080
+      - traefik.http.middlewares.onyx-strip-api.stripprefix.prefixes=/api
+    
+      # /openapi.json → backend (no strip)
+      - traefik.http.routers.onyx-openapi.rule=Host(`onyx.flowdata.ai`) && Path(`/openapi.json`)
+      - traefik.http.routers.onyx-openapi.entryPoints=https
+      - traefik.http.routers.onyx-openapi.tls.certresolver=letsencrypt
+      - traefik.http.services.onyx-openapi.loadbalancer.server.port=8080
 
 
   background:
